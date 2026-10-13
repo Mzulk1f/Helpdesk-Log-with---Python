@@ -1,0 +1,33 @@
+services:
+  helpdesk:
+    build: .
+    container_name: helpdesk-log
+    ports:
+      - "8088:8000"          # host:container - keep the container side at 8000
+    environment:
+      DB_PATH: /data/helpdesk.db
+      APP_TIMEZONE: Asia/Kuala_Lumpur   # times are shown/entered in this timezone
+      SEED_DEMO: "0"                    # "1" = load sample tickets and demo agents on first start
+      # First-run superuser (only used when the database has no users yet).
+      # If you keep the default password you are forced to change it at first sign-in.
+      ADMIN_USERNAME: admin
+      ADMIN_PASSWORD: admin123
+      # Solve-time targets in minutes (office hours / after office hours) and the yellow warning window
+      SLA_OFFICE_MINUTES: "30"
+      SLA_AFTER_MINUTES: "45"
+      SLA_WARN_MINUTES: "5"
+      # Starting values for the Quality objective; once a superuser saves it in Insights, the in-app values take over
+      OBJECTIVE_PERCENT: "95"
+      OBJECTIVE_ERROR_TYPES: "Vesalius,ICare HIS"
+      # AI features (optional). Create a file named .env next to this one containing the line
+      #   ANTHROPIC_API_KEY=sk-ant-...
+      # Without a key the app still works: similar-ticket search and history-based suggestions run locally.
+      ANTHROPIC_API_KEY: "${ANTHROPIC_API_KEY:-}"
+      AI_MODEL: "${AI_MODEL:-claude-haiku-5-5}"
+      # SECRET_KEY: set a long random string to keep sessions valid across rebuilds (optional)
+    volumes:
+      - helpdesk-data:/data  # tickets and users survive container restarts
+    restart: unless-stopped
+
+volumes:
+  helpdesk-data:
